@@ -39,6 +39,8 @@ namespace qmcplusplus
 template<typename T>
 struct SoaSphericalTensor
 {
+  using ValueType = T;
+
   using OffloadArray2D = Array<T, 2, OffloadPinnedAllocator<T>>;
   using OffloadArray3D = Array<T, 3, OffloadPinnedAllocator<T>>;
   ///maximum angular momentum for the center
