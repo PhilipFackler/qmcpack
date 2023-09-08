@@ -133,7 +133,7 @@ LCAOrbitalBuilderT<T>::LCAOrbitalBuilderT(ParticleSetT<T>& els,
     if (cuspC == "yes")
         doCuspCorrection = true;
     // Evaluate the Phase factor. Equals 1 for OBC.
-    EvalPeriodicImagePhaseFactors(SuperTwist, PeriodicImagePhaseFactors);
+    EvalPeriodicImagePhaseFactors(SuperTwist, PeriodicImagePhaseFactors, PeriodicImageDisplacements);
 
     // no need to wait but load the basis set
     processChildren(
@@ -475,7 +475,7 @@ LCAOrbitalBuilderT<T>::createBasisSetH5()
     mBasisSet->setPBCParams(PBCImages, SuperTwist, PeriodicImagePhaseFactors);
     return mBasisSet;
 }
-
+#ifndef QMC_COMPLEX
 template <>
 std::unique_ptr<SPOSetT<double>>
 LCAOrbitalBuilderT<double>::createWithCuspCorrection(xmlNodePtr cur,
@@ -624,6 +624,8 @@ LCAOrbitalBuilderT<float>::createWithCuspCorrection(xmlNodePtr cur,
     return sposet;
 }
 
+#else
+
 template <>
 std::unique_ptr<SPOSetT<std::complex<double>>>
 LCAOrbitalBuilderT<std::complex<double>>::createWithCuspCorrection(
@@ -645,6 +647,8 @@ LCAOrbitalBuilderT<std::complex<float>>::createWithCuspCorrection(
         "supported on complex LCAO.");
     return std::unique_ptr<SPOSetT<std::complex<float>>>{};
 }
+
+#endif
 
 template <typename T>
 std::unique_ptr<SPOSetT<T>>
@@ -669,8 +673,7 @@ LCAOrbitalBuilderT<T>::createSPOSetFromXML(xmlNodePtr cur)
 
     std::unique_ptr<SPOSetT<T>> sposet;
     if (doCuspCorrection) {
-        createWithCuspCorrection(
-            cur, spo_name, cusp_file, std::move(myBasisSet));
+      sposet = createWithCuspCorrection(cur, spo_name, cusp_file, std::move(myBasisSet));
     }
     else {
         auto lcos = std::make_unique<LCAOrbitalSetT<T>>(
@@ -1107,81 +1110,134 @@ LCAOrbitalBuilderT<T>::LoadFullCoefsFromH5(hdf_archive& hin, int setVal,
 template <typename T>
 void
 LCAOrbitalBuilderT<T>::EvalPeriodicImagePhaseFactors(
-    PosType SuperTwist, std::vector<RealType>& LocPeriodicImagePhaseFactors)
+    PosType SuperTwist,
+    Vector<RealType, OffloadPinnedAllocator<RealType>>& LocPeriodicImagePhaseFactors,
+    Array<RealType, 2, OffloadPinnedAllocator<RealType>>& LocPeriodicImageDisplacements)
 {
-    const int NbImages =
-        (PBCImages[0] + 1) * (PBCImages[1] + 1) * (PBCImages[2] + 1);
-    LocPeriodicImagePhaseFactors.resize(NbImages);
-    for (size_t i = 0; i < NbImages; i++)
+  // Allow computation to continue with no HDF file if the system has open boundary conditions.
+  // The complex build is usually only used with open BC for testing.
+  bool usesOpenBC = PBCImages[0] == 0 && PBCImages[1] == 0 && PBCImages[2] == 0;
+
+  ///Exp(ik.g) where i is imaginary, k is the supertwist and g is the translation vector PBCImage.
+  if (h5_path != "" && !usesOpenBC)
+  {
+    hdf_archive hin(myComm);
+    if (myComm->rank() == 0)
+    {
+      if (!hin.open(h5_path, H5F_ACC_RDONLY))
+        APP_ABORT("Could not open H5 file");
+
+      hin.push("Cell", false);
+
+      hin.read(Lattice, "LatticeVectors");
+      hin.close();
+    }
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 3; j++)
+        myComm->bcast(Lattice(i, j));
+  }
+  else if (!usesOpenBC)
+  {
+    APP_ABORT("Attempting to run PBC LCAO with no HDF5 support. Behaviour is unknown. Safer to exit");
+  }
+
+  const int Nx       = PBCImages[0] + 1;
+  const int Ny       = PBCImages[1] + 1;
+  const int Nz       = PBCImages[2] + 1;
+  const int NbImages = Nx * Ny * Nz;
+  LocPeriodicImagePhaseFactors.resize(NbImages);
+  LocPeriodicImageDisplacements.resize(NbImages, 3);
+  for (size_t ix = 0; ix < Nx; ix++)
+    for (size_t iy = 0; iy < Ny; iy++)
+      for (size_t iz = 0; iz < Nz; iz++)
+      {
+        const size_t i                  = iz + Nz * (iy + Ny * ix);
+        int TransX                      = ((ix % 2) * 2 - 1) * ((ix + 1) / 2);
+        int TransY                      = ((iy % 2) * 2 - 1) * ((iy + 1) / 2);
+        int TransZ                      = ((iz % 2) * 2 - 1) * ((iz + 1) / 2);
         LocPeriodicImagePhaseFactors[i] = 1.0;
+        for (size_t idim = 0; idim < 3; idim++)
+          LocPeriodicImageDisplacements(i, idim) =
+              TransX * Lattice(0, idim) + TransY * Lattice(1, idim) + TransZ * Lattice(2, idim);
+      }
 }
 
 template <typename T>
 void
 LCAOrbitalBuilderT<T>::EvalPeriodicImagePhaseFactors(PosType SuperTwist,
-    std::vector<std::complex<RealType>>& LocPeriodicImagePhaseFactors)
+    Vector<std::complex<RealType>, OffloadPinnedAllocator<std::complex<RealType>>>& LocPeriodicImagePhaseFactors,
+    Array<RealType, 2, OffloadPinnedAllocator<RealType>>& LocPeriodicImageDisplacements)
 {
-    // Allow computation to continue with no HDF file if the system has open
-    // boundary conditions. The complex build is usually only used with open BC
-    // for testing.
-    bool usesOpenBC =
-        PBCImages[0] == 0 && PBCImages[1] == 0 && PBCImages[2] == 0;
+  // Allow computation to continue with no HDF file if the system has open boundary conditions.
+  // The complex build is usually only used with open BC for testing.
+  bool usesOpenBC = PBCImages[0] == 0 && PBCImages[1] == 0 && PBCImages[2] == 0;
 
-    /// Exp(ik.g) where i is imaginary, k is the supertwist and g is the
-    /// translation vector PBCImage.
-    if (h5_path != "" && !usesOpenBC) {
-        hdf_archive hin(this->myComm);
-        if (this->myComm->rank() == 0) {
-            if (!hin.open(h5_path, H5F_ACC_RDONLY))
-                APP_ABORT("Could not open H5 file");
-
-            hin.push("Cell", false);
-
-            hin.read(Lattice, "LatticeVectors");
-            hin.close();
-        }
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 3; j++)
-                this->myComm->bcast(Lattice(i, j));
-    }
-    else if (!usesOpenBC) {
-        APP_ABORT("Attempting to run PBC LCAO with no HDF5 support. Behaviour "
-                  "is unknown. Safer to exit");
-    }
-
-    int phase_idx = 0;
-    int TransX, TransY, TransZ;
-    RealType phase;
-
-    for (int i = 0; i <= PBCImages[0]; i++) // loop Translation over X
+  ///Exp(ik.g) where i is imaginary, k is the supertwist and g is the translation vector PBCImage.
+  if (h5_path != "" && !usesOpenBC)
+  {
+    hdf_archive hin(myComm);
+    if (myComm->rank() == 0)
     {
-        TransX = ((i % 2) * 2 - 1) * ((i + 1) / 2);
-        for (int j = 0; j <= PBCImages[1]; j++) // loop Translation over Y
-        {
-            TransY = ((j % 2) * 2 - 1) * ((j + 1) / 2);
-            for (int k = 0; k <= PBCImages[2]; k++) // loop Translation over Z
-            {
-                TransZ = ((k % 2) * 2 - 1) * ((k + 1) / 2);
-                RealType s, c;
-                PosType Val;
-                Val[0] = TransX * Lattice(0, 0) + TransY * Lattice(1, 0) +
-                    TransZ * Lattice(2, 0);
-                Val[1] = TransX * Lattice(0, 1) + TransY * Lattice(1, 1) +
-                    TransZ * Lattice(2, 1);
-                Val[2] = TransX * Lattice(0, 2) + TransY * Lattice(1, 2) +
-                    TransZ * Lattice(2, 2);
+      if (!hin.open(h5_path, H5F_ACC_RDONLY))
+        APP_ABORT("Could not open H5 file");
 
-                phase = dot(SuperTwist, Val);
-                qmcplusplus::sincos(phase, &s, &c);
+      hin.push("Cell", false);
 
-                LocPeriodicImagePhaseFactors.emplace_back(c, s);
-            }
-        }
+      hin.read(Lattice, "LatticeVectors");
+      hin.close();
     }
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 3; j++)
+        myComm->bcast(Lattice(i, j));
+  }
+  else if (!usesOpenBC)
+  {
+    APP_ABORT("Attempting to run PBC LCAO with no HDF5 support. Behaviour is unknown. Safer to exit");
+  }
+
+  int phase_idx = 0;
+  int TransX, TransY, TransZ;
+  RealType phase;
+  const int Nx       = PBCImages[0] + 1;
+  const int Ny       = PBCImages[1] + 1;
+  const int Nz       = PBCImages[2] + 1;
+  const int NbImages = Nx * Ny * Nz;
+  LocPeriodicImagePhaseFactors.resize(NbImages);
+  LocPeriodicImageDisplacements.resize(NbImages, 3);
+  for (size_t ix = 0; ix < Nx; ix++)
+    for (size_t iy = 0; iy < Ny; iy++)
+      for (size_t iz = 0; iz < Nz; iz++)
+      {
+        const size_t i = iz + Nz * (iy + Ny * ix);
+        int TransX     = ((ix % 2) * 2 - 1) * ((ix + 1) / 2);
+        int TransY     = ((iy % 2) * 2 - 1) * ((iy + 1) / 2);
+        int TransZ     = ((iz % 2) * 2 - 1) * ((iz + 1) / 2);
+        RealType s, c;
+        PosType Val;
+        for (size_t idim = 0; idim < 3; idim++)
+        {
+          Val[idim] = TransX * Lattice(0, idim) + TransY * Lattice(1, idim) + TransZ * Lattice(2, idim);
+          LocPeriodicImageDisplacements(i, idim) = Val[idim];
+        }
+
+        phase = dot(SuperTwist, Val);
+        qmcplusplus::sincos(phase, &s, &c);
+
+        LocPeriodicImagePhaseFactors[i] = std::complex<RealType>(c, s);
+      }
 }
 
+#ifndef QMC_COMPLEX
+#ifndef MIXED_PRECISION
 template class LCAOrbitalBuilderT<double>;
+#else
 template class LCAOrbitalBuilderT<float>;
+#endif
+#else
+#ifndef MIXED_PRECISION
 template class LCAOrbitalBuilderT<std::complex<double>>;
+#else
 template class LCAOrbitalBuilderT<std::complex<float>>;
+#endif
+#endif
 } // namespace qmcplusplus

@@ -120,6 +120,35 @@ VirtualParticleSetT<T>::releaseResource(ResourceCollection& collection,
     ParticleSetT<T>::releaseResource(collection, p_list);
 }
 
+template <typename T>
+const RefVectorWithLeader<const DistanceTableABT<T>>
+VirtualParticleSetT<T>::extractDTRefList(
+    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
+    int id)
+{
+    RefVectorWithLeader<const DistanceTableABT<T>> dt_list(
+        vp_list.getLeader().getDistTableAB(id));
+    dt_list.reserve(vp_list.size());
+    for (const VirtualParticleSet& vp : vp_list) {
+        const auto& d_table = vp.getDistTableAB(id);
+        dt_list.push_back(d_table);
+    }
+    return dt_list;
+}
+
+template <typename T>
+const std::vector<VirtualParticleSetT<T>::PosType>
+VirtualParticleSetT<T>::extractVPCoords(
+    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list)
+{
+    std::vector<PosType> coords_list;
+    for (const VirtualParticleSetT<T>& vp : vp_list)
+        for (int iat = 0; iat < vp.getTotalNum(); iat++)
+            coords_list.push_back(vp.R[iat]);
+
+    return coords_list;
+}
+
 /// move virtual particles to new postions and update distance tables
 template <typename T>
 void
@@ -265,8 +294,11 @@ VirtualParticleSetT<T>::mw_makeMovesWithSpin(
     ParticleSetT<T>::mw_update(p_list);
 }
 
+#ifndef QMC_COMPLEX
 template class VirtualParticleSetT<double>;
 template class VirtualParticleSetT<float>;
+#else
 template class VirtualParticleSetT<std::complex<double>>;
 template class VirtualParticleSetT<std::complex<float>>;
+#endif
 } // namespace qmcplusplus

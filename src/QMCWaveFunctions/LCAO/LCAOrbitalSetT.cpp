@@ -38,6 +38,8 @@ struct LCAOrbitalSetT<T>::LCAOMultiWalkerMem : public Resource
     OffloadMWVGLArray basis_mw; // [5][NW][NumAO]
     OffloadMWVArray phi_v; // [NW][NumMO]
     OffloadMWVArray basis_v_mw; // [NW][NumMO]
+    OffloadMWVArray vp_phi_v;       // [NVPs][NumMO]
+    OffloadMWVArray vp_basis_v_mw;  // [NVPs][NumAO]
 };
 
 template <class T>
@@ -129,6 +131,7 @@ template <class T>
 void
 LCAOrbitalSetT<T>::createResource(ResourceCollection& collection) const
 {
+    myBasisSet->createResource(collection);
     auto resource_index =
         collection.addResource(std::make_unique<LCAOMultiWalkerMem>());
 }
@@ -140,6 +143,7 @@ LCAOrbitalSetT<T>::acquireResource(ResourceCollection& collection,
 {
     assert(this == &spo_list.getLeader());
     auto& spo_leader = spo_list.template getCastedLeader<LCAOrbitalSetT<T>>();
+    spo_leader.myBasisSet->acquireResource(collection, extractBasisRefList(spo_list));
     spo_leader.mw_mem_handle_ = collection.lendResource<LCAOMultiWalkerMem>();
 }
 
@@ -150,7 +154,19 @@ LCAOrbitalSetT<T>::releaseResource(ResourceCollection& collection,
 {
     assert(this == &spo_list.getLeader());
     auto& spo_leader = spo_list.template getCastedLeader<LCAOrbitalSetT<T>>();
+    spo_leader.myBasisSet->releaseResource(collection, extractBasisRefList(spo_list));
     collection.takebackResource(spo_leader.mw_mem_handle_);
+}
+
+template <class T>
+RefVectorWithLeader<typename LCAOrbitalSetT<T>::basis_type> LCAOrbitalSetT<T>::extractBasisRefList(
+    const RefVectorWithLeader<SPOSetT<T>>& spo_list) const
+{
+    RefVectorWithLeader<basis_type> basis_list(*spo_list.template getCastedLeader<LCAOrbitalSetT<T>>().myBasisSet);
+    basis_list.reserve(spo_list.size());
+    for (size_t iw = 0; iw < spo_list.size(); iw++)
+      basis_list.push_back(*spo_list.template getCastedElement<LCAOrbitalSetT<T>>(iw).myBasisSet);
+    return basis_list;
 }
 
 template <class T>
@@ -180,7 +196,7 @@ LCAOrbitalSetT<T>::evaluateValue(
 /** Find a better place for other user classes, Matrix should be padded as well
  */
 template <typename T, unsigned D>
-static void
+inline void
 Product_ABt(const VectorSoaContainer<T, D>& A, const Matrix<T>& B,
     VectorSoaContainer<T, D>& C)
 {
@@ -193,7 +209,7 @@ Product_ABt(const VectorSoaContainer<T, D>& A, const Matrix<T>& B,
 }
 
 template <class T>
-void
+inline void
 LCAOrbitalSetT<T>::evaluate_vgl_impl(const vgl_type& temp, ValueVector& psi,
     GradVector& dpsi, ValueVector& d2psi) const
 {
@@ -211,7 +227,7 @@ LCAOrbitalSetT<T>::evaluate_vgl_impl(const vgl_type& temp, ValueVector& psi,
 }
 
 template <class T>
-void
+inline void
 LCAOrbitalSetT<T>::evaluate_vgh_impl(const vgh_type& temp, ValueVector& psi,
     GradVector& dpsi, HessVector& d2psi) const
 {
@@ -242,7 +258,7 @@ LCAOrbitalSetT<T>::evaluate_vgh_impl(const vgh_type& temp, ValueVector& psi,
 }
 
 template <class T>
-void
+inline void
 LCAOrbitalSetT<T>::evaluate_vghgh_impl(const vghgh_type& temp, int i,
     ValueMatrix& psi, GradMatrix& dpsi, HessMatrix& d2psi,
     GGGMatrix& dghpsi) const
@@ -314,7 +330,7 @@ LCAOrbitalSetT<T>::evaluate_vghgh_impl(const vghgh_type& temp, int i,
 }
 
 template <class T>
-void
+inline void
 LCAOrbitalSetT<T>::evaluate_vghgh_impl(const vghgh_type& temp, ValueVector& psi,
     GradVector& dpsi, HessVector& d2psi, GGGVector& dghpsi) const
 {
@@ -385,7 +401,7 @@ LCAOrbitalSetT<T>::evaluate_vghgh_impl(const vghgh_type& temp, ValueVector& psi,
 }
 
 template <class T>
-void
+inline void
 LCAOrbitalSetT<T>::evaluate_ionderiv_v_row_impl(
     const vgl_type& temp, GradVector& dpsi) const
 {
@@ -471,12 +487,12 @@ LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(
 {
     assert(this == &spo_list.getLeader());
     auto& spo_leader = spo_list.template getCastedLeader<LCAOrbitalSetT<T>>();
-    auto& basis_mw = spo_leader.mw_mem_handle_.getResource().basis_mw;
-    basis_mw.resize(QMCTraits::DIM_VGL, spo_list.size(), BasisSetSize);
+    auto& basis_vgl_mw = spo_leader.mw_mem_handle_.getResource().basis_vgl_mw;
+    basis_vgl_mw.resize(QMCTraits::DIM_VGL, spo_list.size(), BasisSetSize);
 
     {
         ScopedTimer local(basis_timer_);
-        myBasisSet->mw_evaluateVGL(P_list, iat, basis_mw);
+        myBasisSet->mw_evaluateVGL(P_list, iat, basis_vgl_mw);
     }
 
     if (Identity) {
@@ -486,7 +502,7 @@ LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(
 
         for (size_t idim = 0; idim < QMCTraits::DIM_VGL; idim++)
             for (int iw = 0; iw < nw; iw++)
-                std::copy_n(basis_mw.data_at(idim, iw, 0), output_size,
+                std::copy_n(basis_vgl_mw.data_at(idim, iw, 0), output_size,
                     phi_vgl_v.data_at(idim, iw, 0));
     }
     else {
@@ -503,10 +519,46 @@ LCAOrbitalSetT<T>::mw_evaluateVGLImplGEMM(
                 requested_orb_size, // MOs
                 spo_list.size() * QMCTraits::DIM_VGL, // walkers * DIM_VGL
                 BasisSetSize, // AOs
-                1, C_partial_view.data(), BasisSetSize, basis_mw.data(),
+                1, C_partial_view.data(), BasisSetSize, basis_vgl_mw.data(),
                 BasisSetSize, 0, phi_vgl_v.data(), requested_orb_size);
         }
     }
+}
+
+template <typename T>
+void
+LCAOrbitalSetT<T>::mw_evaluateValueVPsImplGEMM(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                                const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
+                                                OffloadMWVArray& vp_phi_v) const
+{
+  assert(this == &spo_list.getLeader());
+  auto& spo_leader = spo_list.template getCastedLeader<LCAOrbitalSetT>();
+  //const size_t nw  = spo_list.size();
+  auto& vp_basis_v_mw = spo_leader.mw_mem_handle_.getResource().vp_basis_v_mw;
+  //Splatter basis_v
+  const size_t nVPs = vp_phi_v.size(0);
+  vp_basis_v_mw.resize(nVPs, BasisSetSize);
+
+  auto basis_list = spo_leader.extractBasisRefList(spo_list);
+  myBasisSet->mw_evaluateValueVPs(basis_list, vp_list, vp_basis_v_mw);
+  vp_basis_v_mw.updateFrom(); // TODO: remove this when gemm is implemented
+
+  if (Identity)
+  {
+    std::copy_n(vp_basis_v_mw.data_at(0, 0), this->OrbitalSetSize * nVPs, vp_phi_v.data_at(0, 0));
+  }
+  else
+  {
+    const size_t requested_orb_size = vp_phi_v.size(1);
+    assert(requested_orb_size <= this->OrbitalSetSize);
+    ValueMatrix C_partial_view(C->data(), requested_orb_size, BasisSetSize);
+    BLAS::gemm('T', 'N',
+               requested_orb_size, // MOs
+               nVPs,               // walkers * Virtual Particles
+               BasisSetSize,       // AOs
+               1, C_partial_view.data(), BasisSetSize, vp_basis_v_mw.data(), BasisSetSize, 0, vp_phi_v.data(),
+               requested_orb_size);
+  }
 }
 
 template <class T>
@@ -571,14 +623,20 @@ LCAOrbitalSetT<T>::mw_evaluateDetRatios(
     const std::vector<const T*>& invRow_ptr_list,
     std::vector<std::vector<T>>& ratios_list) const
 {
-    const size_t nw = spo_list.size();
-    for (size_t iw = 0; iw < nw; iw++) {
-        for (size_t iat = 0; iat < vp_list[iw].getTotalNum(); iat++) {
-            spo_list[iw].evaluateValue(vp_list[iw], iat, psi_list[iw]);
-            ratios_list[iw][iat] = simd::dot(psi_list[iw].get().data(),
-                invRow_ptr_list[iw], psi_list[iw].get().size());
-        }
-    }
+  assert(this == &spo_list.getLeader());
+  auto& spo_leader = spo_list.template getCastedLeader<LCAOrbitalSetT>();
+  auto& vp_phi_v   = spo_leader.mw_mem_handle_.getResource().vp_phi_v;
+
+  const size_t nVPs               = VirtualParticleSetT<T>::countVPs(vp_list);
+  const size_t requested_orb_size = psi_list[0].get().size();
+  vp_phi_v.resize(nVPs, requested_orb_size);
+
+  mw_evaluateValueVPsImplGEMM(spo_list, vp_list, vp_phi_v);
+
+  size_t index = 0;
+  for (size_t iw = 0; iw < vp_list.size(); iw++)
+    for (size_t iat = 0; iat < vp_list[iw].getTotalNum(); iat++)
+      ratios_list[iw][iat] = simd::dot(vp_phi_v.data_at(index++, 0), invRow_ptr_list[iw], requested_orb_size);
 }
 
 template <class T>
@@ -954,9 +1012,12 @@ LCAOrbitalSetT<T>::applyRotation(
 }
 
 // Class concrete types from ValueType
+#ifndef QMC_COMPLEX
 template class LCAOrbitalSetT<double>;
 template class LCAOrbitalSetT<float>;
+#else
 template class LCAOrbitalSetT<std::complex<double>>;
 template class LCAOrbitalSetT<std::complex<float>>;
+#endif
 
 } // namespace qmcplusplus

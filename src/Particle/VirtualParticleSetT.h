@@ -16,7 +16,7 @@
 #define QMCPLUSPLUS_VIRTUAL_PARTICLESETT_H
 
 #include "OMPTarget/OffloadAlignedAllocators.hpp"
-#include "Particle/ParticleSetT.h"
+#include "Particle/ParticleSet.h"
 #include <ResourceHandle.h>
 
 namespace qmcplusplus
@@ -101,6 +101,19 @@ public:
     static void
     releaseResource(ResourceCollection& collection,
         const RefVectorWithLeader<VirtualParticleSetT>& vp_list);
+
+    /**Extract list of Distance Tables
+     */
+    static const RefVectorWithLeader<const DistanceTableABT<T>>
+    extractDTRefList(
+        const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
+        int id);
+
+    /**Extract list of VP coordinates, flattened over all walkers
+     */
+    static const std::vector<PosType>
+    extractVPCoords(
+        const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list);
 
     /** move virtual particles to new postions and update distance tables
      * @param refp reference particle set

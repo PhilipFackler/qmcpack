@@ -68,7 +68,8 @@ protected:
     PosType SuperTwist;
     /// Periodic Image Phase Factors. Correspond to the phase from the
     /// PBCImages. Computed only once.
-    std::vector<T> PeriodicImagePhaseFactors;
+    Vector<ValueType, OffloadPinnedAllocator<ValueType>> PeriodicImagePhaseFactors;
+    Array<RealType, 2, OffloadPinnedAllocator<RealType>> PeriodicImageDisplacements;
     /// Store Lattice parameters from HDF5 to use in PeriodicImagePhaseFactors
     Tensor<double, 3> Lattice;
 
@@ -109,10 +110,12 @@ protected:
         Matrix<RealType>& Creal, bool Multidet);
     void
     EvalPeriodicImagePhaseFactors(PosType SuperTwist,
-        std::vector<RealType>& LocPeriodicImagePhaseFactors);
+      Vector<RealType, OffloadPinnedAllocator<RealType>>& LocPeriodicImagePhaseFactors,
+      Array<RealType, 2, OffloadPinnedAllocator<RealType>>& LocPeriodicImageDisplacements);
     void
     EvalPeriodicImagePhaseFactors(PosType SuperTwist,
-        std::vector<std::complex<RealType>>& LocPeriodicImagePhaseFactors);
+      Vector<std::complex<RealType>, OffloadPinnedAllocator<std::complex<RealType>>>& LocPeriodicImagePhaseFactors,
+      Array<RealType, 2, OffloadPinnedAllocator<RealType>>& LocPeriodicImageDisplacements);
     /** read matrix from h5 file
      * \param[in] hin: hdf5 arhive to be read from
      * \param setname: where to read from in hdf5 archive
