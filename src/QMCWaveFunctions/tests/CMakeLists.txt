@@ -117,6 +117,7 @@ set(SPOSET_SRC
     test_ConstantSPOSet.cpp
     test_ConstantSPOSetT.cpp
     test_LCAO_diamondC_2x1x1.cpp
+    test_RotatedSPOsT.cpp
     ${MO_SRCS})
 if(NiO_a16_H5_FOUND)
   set(SPOSET_SRC ${SPOSET_SRC} test_einset_NiO_a16.cpp)
