@@ -1,17 +1,14 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2016 Jeongnim Kim and QMCPACK developers.
 //
-// File developed by: Jaron T. Krogel, krogeljt@ornl.gov, Oak Ridge National
-// Laboratory
-//                    Jeongnim Kim, jeongnim.kim@gmail.com, University of
-//                    Illinois at Urbana-Champaign Mark A. Berrill,
-//                    berrillma@ornl.gov, Oak Ridge National Laboratory
+// File developed by: Jaron T. Krogel, krogeljt@ornl.gov, Oak Ridge National Laboratory
+//                    Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
+//                    Mark A. Berrill, berrillma@ornl.gov, Oak Ridge National Laboratory
 //
-// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois
-// at Urbana-Champaign
+// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef QMCPLUSPLUS_COMPOSITE_SPOSETT_H
@@ -24,109 +21,97 @@
 
 namespace qmcplusplus
 {
-template <typename T>
+template<typename T>
 class CompositeSPOSetT : public SPOSetT<T>
 {
 public:
-    using ValueVector = typename SPOSetT<T>::ValueVector;
-    using GradVector = typename SPOSetT<T>::GradVector;
-    using ValueMatrix = typename SPOSetT<T>::ValueMatrix;
-    using GradMatrix = typename SPOSetT<T>::GradMatrix;
-    using HessMatrix = typename SPOSetT<T>::HessMatrix;
-    using GGGMatrix = typename SPOSetT<T>::GGGMatrix;
+  using ValueVector = typename SPOSetT<T>::ValueVector;
+  using GradVector  = typename SPOSetT<T>::GradVector;
+  using ValueMatrix = typename SPOSetT<T>::ValueMatrix;
+  using GradMatrix  = typename SPOSetT<T>::GradMatrix;
+  using HessMatrix  = typename SPOSetT<T>::HessMatrix;
+  using GGGMatrix   = typename SPOSetT<T>::GGGMatrix;
 
-    /// component SPOSets
-    std::vector<std::unique_ptr<SPOSetT<T>>> components;
-    /// temporary storage for values
-    std::vector<ValueVector> component_values;
-    /// temporary storage for gradients
-    std::vector<GradVector> component_gradients;
-    /// temporary storage for laplacians
-    std::vector<ValueVector> component_laplacians;
-    /// store the precomputed offsets
-    std::vector<int> component_offsets;
+  /// component SPOSets
+  std::vector<std::unique_ptr<SPOSetT<T>>> components;
+  /// temporary storage for values
+  std::vector<ValueVector> component_values;
+  /// temporary storage for gradients
+  std::vector<GradVector> component_gradients;
+  /// temporary storage for laplacians
+  std::vector<ValueVector> component_laplacians;
+  /// store the precomputed offsets
+  std::vector<int> component_offsets;
 
-    CompositeSPOSetT(const std::string& my_name);
-    /**
+  CompositeSPOSetT(const std::string& my_name);
+  /**
      * @TODO: do we want template copy constructor
      * (i.e., copy from other with different type argument)?
      */
-    CompositeSPOSetT(const CompositeSPOSetT& other);
-    ~CompositeSPOSetT() override;
+  CompositeSPOSetT(const CompositeSPOSetT& other);
+  ~CompositeSPOSetT() override;
 
-    std::string
-    getClassName() const override
-    {
-        return "CompositeSPOSetT";
-    }
+  std::string getClassName() const override { return "CompositeSPOSetT"; }
 
-    /// add a sposet component to this composite sposet
-    void
-    add(std::unique_ptr<SPOSetT<T>> component);
+  /// add a sposet component to this composite sposet
+  void add(std::unique_ptr<SPOSetT<T>> component);
 
-    /// print out component info
-    void
-    report();
+  /// print out component info
+  void report();
 
-    // SPOSet interface methods
-    /// size is determined by component sposets and nothing else
-    inline void
-    setOrbitalSetSize(int norbs) override
-    {
-    }
+  // SPOSet interface methods
+  /// size is determined by component sposets and nothing else
+  inline void setOrbitalSetSize(int norbs) override {}
 
-    std::unique_ptr<SPOSetT<T>>
-    makeClone() const override;
+  std::unique_ptr<SPOSetT<T>> makeClone() const override;
 
-    void
-    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) override;
+  void evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi) override;
 
-    void
-    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
-        GradVector& dpsi, ValueVector& d2psi) override;
+  void evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi) override;
 
-    /// unimplemented functions call this to abort
-    inline void
-    not_implemented(const std::string& method)
-    {
-        APP_ABORT("CompositeSPOSetT::" + method + " has not been implemented");
-    }
+  /// unimplemented functions call this to abort
+  inline void not_implemented(const std::string& method)
+  {
+    APP_ABORT("CompositeSPOSetT::" + method + " has not been implemented");
+  }
 
-    // methods to be implemented in the future (possibly)
-    void
-    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
-        ValueMatrix& logdet, GradMatrix& dlogdet,
-        ValueMatrix& d2logdet) override;
-    void
-    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
-        ValueMatrix& logdet, GradMatrix& dlogdet,
-        HessMatrix& ddlogdet) override;
-    void
-    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
-        ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& ddlogdet,
-        GGGMatrix& dddlogdet) override;
+  // methods to be implemented in the future (possibly)
+  void evaluate_notranspose(const ParticleSetT<T>& P,
+                            int first,
+                            int last,
+                            ValueMatrix& logdet,
+                            GradMatrix& dlogdet,
+                            ValueMatrix& d2logdet) override;
+  void evaluate_notranspose(const ParticleSetT<T>& P,
+                            int first,
+                            int last,
+                            ValueMatrix& logdet,
+                            GradMatrix& dlogdet,
+                            HessMatrix& ddlogdet) override;
+  void evaluate_notranspose(const ParticleSetT<T>& P,
+                            int first,
+                            int last,
+                            ValueMatrix& logdet,
+                            GradMatrix& dlogdet,
+                            HessMatrix& ddlogdet,
+                            GGGMatrix& dddlogdet) override;
 };
 
-template <typename T>
+template<typename T>
 class CompositeSPOSetBuilderT : public SPOSetBuilderT<T>
 {
 public:
-    CompositeSPOSetBuilderT(
-        Communicate* comm, const SPOSetBuilderFactoryT<T>& factory) :
-        SPOSetBuilderT<T>("Composite", comm),
-        sposet_builder_factory_(factory)
-    {
-    }
+  CompositeSPOSetBuilderT(Communicate* comm, const SPOSetBuilderFactoryT<T>& factory)
+      : SPOSetBuilderT<T>("Composite", comm), sposet_builder_factory_(factory)
+  {}
 
-    // SPOSetBuilder interface
-    std::unique_ptr<SPOSetT<T>>
-    createSPOSetFromXML(xmlNodePtr cur) override;
+  // SPOSetBuilder interface
+  std::unique_ptr<SPOSetT<T>> createSPOSetFromXML(xmlNodePtr cur) override;
 
-    std::unique_ptr<SPOSetT<T>>
-    createSPOSet(xmlNodePtr cur, SPOSetInputInfo& input) override;
+  std::unique_ptr<SPOSetT<T>> createSPOSet(xmlNodePtr cur, SPOSetInputInfo& input) override;
 
-    /// reference to the sposet_builder_factory
-    const SPOSetBuilderFactoryT<T>& sposet_builder_factory_;
+  /// reference to the sposet_builder_factory
+  const SPOSetBuilderFactoryT<T>& sposet_builder_factory_;
 };
 
 } // namespace qmcplusplus

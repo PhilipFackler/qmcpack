@@ -22,11 +22,11 @@ namespace qmcplusplus
 {
 template<class T>
 int PWBasisT<T>::readbasis(hdf_archive& h5basisgroup,
-                       RealType ecutoff,
-                       const ParticleLayout& lat,
-                       const std::string& pwname,
-                       const std::string& pwmultname,
-                       bool resizeContainer)
+                           RealType ecutoff,
+                           const ParticleLayout& lat,
+                           const std::string& pwname,
+                           const std::string& pwmultname,
+                           bool resizeContainer)
 {
   ///make a local copy
   Lattice = lat;

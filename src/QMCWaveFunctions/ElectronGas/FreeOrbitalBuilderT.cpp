@@ -1,3 +1,19 @@
+//////////////////////////////////////////////////////////////////////////////////////
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
+//
+// Copyright (c) 2022 QMCPACK developers.
+//
+// File developed by: Miguel Morales, moralessilva2@llnl.gov, Lawrence Livermore National Laboratory
+//                    Jeremy McMinnis, jmcminis@gmail.com, University of Illinois at Urbana-Champaign
+//                    Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
+//                    Jaron T. Krogel, krogeljt@ornl.gov, Oak Ridge National Laboratory
+//                    Mark A. Berrill, berrillma@ornl.gov, Oak Ridge National Laboratory
+//                    Yubo "Paul" Yang, yubo.paul.yang@gmail.com, CCQ @ Flatiron
+//
+// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
+//////////////////////////////////////////////////////////////////////////////////////
+
 #include "OhmmsData/AttributeSet.h"
 #include "LongRange/StructFact.h"
 #include "LongRange/KContainerT.h"
@@ -6,12 +22,12 @@
 
 namespace qmcplusplus
 {
-template <typename T>
+template<typename T>
 FreeOrbitalBuilderT<T>::FreeOrbitalBuilderT(ParticleSetT<T>& els, Communicate* comm, xmlNodePtr cur)
     : SPOSetBuilderT<T>("PW", comm), targetPtcl(els)
 {}
 
-template <typename T>
+template<typename T>
 std::unique_ptr<SPOSetT<T>> FreeOrbitalBuilderT<T>::createSPOSetFromXML(xmlNodePtr cur)
 {
   int norb = -1;
@@ -89,7 +105,7 @@ std::unique_ptr<SPOSetT<T>> FreeOrbitalBuilderT<T>::createSPOSetFromXML(xmlNodeP
   return sposet;
 }
 
-template <typename T>
+template<typename T>
 bool FreeOrbitalBuilderT<T>::in_list(const int j, const std::vector<int> l)
 {
   for (int i = 0; i < l.size(); i++)

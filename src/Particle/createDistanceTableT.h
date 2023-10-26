@@ -1,16 +1,13 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2016 Jeongnim Kim and QMCPACK developers.
 //
-// File developed by: Jeremy McMinnis, jmcminis@gmail.com, University of
-// Illinois at Urbana-Champaign
-//                    Jeongnim Kim, jeongnim.kim@gmail.com, University of
-//                    Illinois at Urbana-Champaign
+// File developed by: Jeremy McMinnis, jmcminis@gmail.com, University of Illinois at Urbana-Champaign
+//                    Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //
-// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois
-// at Urbana-Champaign
+// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef QMCPLUSPLUS_DISTANCETABLET_H
@@ -39,50 +36,47 @@ namespace qmcplusplus
  */
 
 /// free function to create a distable table of s-s
-template <typename T>
-std::unique_ptr<DistanceTableT<T>>
-createDistanceTableAAT(ParticleSetT<T>& s, std::ostream& description);
+template<typename T>
+std::unique_ptr<DistanceTableT<T>> createDistanceTableAAT(ParticleSetT<T>& s, std::ostream& description);
 
-template <typename T>
-std::unique_ptr<DistanceTableT<T>>
-createDistanceTableAATOMPTarget(ParticleSetT<T>& s, std::ostream& description);
+template<typename T>
+std::unique_ptr<DistanceTableT<T>> createDistanceTableAATOMPTarget(ParticleSetT<T>& s, std::ostream& description);
 
-template <typename T>
-inline std::unique_ptr<DistanceTableT<T>>
-createDistanceTableT(ParticleSetT<T>& s, std::ostream& description)
+template<typename T>
+inline std::unique_ptr<DistanceTableT<T>> createDistanceTableT(ParticleSetT<T>& s, std::ostream& description)
 {
-    // during P-by-P move, the cost of single particle evaluation of distance
-    // tables is determined by the number of source particles. Thus the
-    // implementation selection is determined by the source particle set.
-    if (s.getCoordinates().getKind() == DynamicCoordinateKind::DC_POS_OFFLOAD)
-        return createDistanceTableAATOMPTarget(s, description);
-    else
-        return createDistanceTableAAT(s, description);
+  // during P-by-P move, the cost of single particle evaluation of distance
+  // tables is determined by the number of source particles. Thus the
+  // implementation selection is determined by the source particle set.
+  if (s.getCoordinates().getKind() == DynamicCoordinateKind::DC_POS_OFFLOAD)
+    return createDistanceTableAATOMPTarget(s, description);
+  else
+    return createDistanceTableAAT(s, description);
 }
 
 /// free function create a distable table of s-t
-template <typename T>
-std::unique_ptr<DistanceTableT<T>>
-createDistanceTableABT(
-    const ParticleSetT<T>& s, ParticleSetT<T>& t, std::ostream& description);
+template<typename T>
+std::unique_ptr<DistanceTableT<T>> createDistanceTableABT(const ParticleSetT<T>& s,
+                                                          ParticleSetT<T>& t,
+                                                          std::ostream& description);
 
-template <typename T>
-std::unique_ptr<DistanceTableT<T>>
-createDistanceTableABTOMPTarget(
-    const ParticleSetT<T>& s, ParticleSetT<T>& t, std::ostream& description);
+template<typename T>
+std::unique_ptr<DistanceTableT<T>> createDistanceTableABTOMPTarget(const ParticleSetT<T>& s,
+                                                                   ParticleSetT<T>& t,
+                                                                   std::ostream& description);
 
-template <typename T>
-inline std::unique_ptr<DistanceTableT<T>>
-createDistanceTableT(
-    const ParticleSetT<T>& s, ParticleSetT<T>& t, std::ostream& description)
+template<typename T>
+inline std::unique_ptr<DistanceTableT<T>> createDistanceTableT(const ParticleSetT<T>& s,
+                                                               ParticleSetT<T>& t,
+                                                               std::ostream& description)
 {
-    // during P-by-P move, the cost of single particle evaluation of distance
-    // tables is determined by the number of source particles. Thus the
-    // implementation selection is determined by the source particle set.
-    if (s.getCoordinates().getKind() == DynamicCoordinateKind::DC_POS_OFFLOAD)
-        return createDistanceTableABTOMPTarget(s, t, description);
-    else
-        return createDistanceTableABT(s, t, description);
+  // during P-by-P move, the cost of single particle evaluation of distance
+  // tables is determined by the number of source particles. Thus the
+  // implementation selection is determined by the source particle set.
+  if (s.getCoordinates().getKind() == DynamicCoordinateKind::DC_POS_OFFLOAD)
+    return createDistanceTableABTOMPTarget(s, t, description);
+  else
+    return createDistanceTableABT(s, t, description);
 }
 
 } // namespace qmcplusplus

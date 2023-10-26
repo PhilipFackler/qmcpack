@@ -1,25 +1,20 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2016 Jeongnim Kim and QMCPACK developers.
 //
-// File developed by: Ken Esler, kpesler@gmail.com, University of Illinois at
-// Urbana-Champaign
-//                    Miguel Morales, moralessilva2@llnl.gov, Lawrence Livermore
-//                    National Laboratory Raymond Clay III,
-//                    j.k.rofling@gmail.com, Lawrence Livermore National
-//                    Laboratory Jeremy McMinnis, jmcminis@gmail.com, University
-//                    of Illinois at Urbana-Champaign Jaron T. Krogel,
-//                    krogeljt@ornl.gov, Oak Ridge National Laboratory Jeongnim
-//                    Kim, jeongnim.kim@gmail.com, University of Illinois at
-//                    Urbana-Champaign Ying Wai Li, yingwaili@ornl.gov, Oak
-//                    Ridge National Laboratory Mark A. Berrill,
-//                    berrillma@ornl.gov, Oak Ridge National Laboratory William
-//                    F. Godoy, godoywf@ornl.gov, Oak Ridge National Laboratory
+// File developed by: Ken Esler, kpesler@gmail.com, University of Illinois at Urbana-Champaign
+//                    Miguel Morales, moralessilva2@llnl.gov, Lawrence Livermore National Laboratory
+//                    Raymond Clay III, j.k.rofling@gmail.com, Lawrence Livermore National Laboratory
+//                    Jeremy McMinnis, jmcminis@gmail.com, University of Illinois at Urbana-Champaign
+//                    Jaron T. Krogel, krogeljt@ornl.gov, Oak Ridge National Laboratory
+//                    Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
+//                    Ying Wai Li, yingwaili@ornl.gov, Oak Ridge National Laboratory
+//                    Mark A. Berrill,berrillma@ornl.gov, Oak Ridge National Laboratory
+//                    William F. Godoy, godoywf@ornl.gov, Oak Ridge National Laboratory
 //
-// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois
-// at Urbana-Champaign
+// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef QMCPLUSPLUS_SPOSETT_H
@@ -37,7 +32,7 @@ namespace qmcplusplus
 {
 class ResourceCollection;
 
-template <class T>
+template<class T>
 class SPOSetT;
 namespace testing
 {
@@ -53,217 +48,175 @@ OptVariablesTypeT<std::complex<double>>& getMyVars(SPOSetT<std::complex<double>>
  * a number of single-particle orbitals with capabilities of evaluating \f$
  * \psi_j({\bf r}_i)\f$
  */
-template <class T>
+template<class T>
 class SPOSetT : public QMCTraits
 {
 public:
-    using ValueVector = typename OrbitalSetTraits<T>::ValueVector;
-    using ValueMatrix = typename OrbitalSetTraits<T>::ValueMatrix;
-    using GradVector = typename OrbitalSetTraits<T>::GradVector;
-    using GradMatrix = typename OrbitalSetTraits<T>::GradMatrix;
-    using GradType = TinyVector<T, DIM>;
-    using HessVector = typename OrbitalSetTraits<T>::HessVector;
-    using HessMatrix = typename OrbitalSetTraits<T>::HessMatrix;
-    using GGGVector = typename OrbitalSetTraits<T>::GradHessVector;
-    using GGGMatrix = typename OrbitalSetTraits<T>::GradHessMatrix;
-    using SPOMap =
-        std::map<std::string, const std::unique_ptr<const SPOSetT<T>>>;
-    using OffloadMWVGLArray =
-        Array<T, 3, OffloadPinnedAllocator<T>>; // [VGL, walker, Orbs]
-    using OffloadMWVArray =
-        Array<T, 2, OffloadPinnedAllocator<T>>; // [walker, Orbs]
-    using PosType = typename OrbitalSetTraits<T>::PosType;
-    using RealType = typename OrbitalSetTraits<T>::RealType;
-    using ComplexType = typename OrbitalSetTraits<T>::ComplexType;
-    using ValueType = typename OrbitalSetTraits<T>::ValueType;
-    using FullRealType = typename OrbitalSetTraits<double>::RealType;
-    using FullValueType = typename OrbitalSetTraits<T>::FullValueType;
-    ;
-    template <typename DT>
-    using OffloadMatrix = Matrix<DT, OffloadPinnedAllocator<DT>>;
+  using ValueVector       = typename OrbitalSetTraits<T>::ValueVector;
+  using ValueMatrix       = typename OrbitalSetTraits<T>::ValueMatrix;
+  using GradVector        = typename OrbitalSetTraits<T>::GradVector;
+  using GradMatrix        = typename OrbitalSetTraits<T>::GradMatrix;
+  using GradType          = TinyVector<T, DIM>;
+  using HessVector        = typename OrbitalSetTraits<T>::HessVector;
+  using HessMatrix        = typename OrbitalSetTraits<T>::HessMatrix;
+  using GGGVector         = typename OrbitalSetTraits<T>::GradHessVector;
+  using GGGMatrix         = typename OrbitalSetTraits<T>::GradHessMatrix;
+  using SPOMap            = std::map<std::string, const std::unique_ptr<const SPOSetT<T>>>;
+  using OffloadMWVGLArray = Array<T, 3, OffloadPinnedAllocator<T>>; // [VGL, walker, Orbs]
+  using OffloadMWVArray   = Array<T, 2, OffloadPinnedAllocator<T>>; // [walker, Orbs]
+  using PosType           = typename OrbitalSetTraits<T>::PosType;
+  using RealType          = typename OrbitalSetTraits<T>::RealType;
+  using ComplexType       = typename OrbitalSetTraits<T>::ComplexType;
+  using ValueType         = typename OrbitalSetTraits<T>::ValueType;
+  using FullRealType      = typename OrbitalSetTraits<double>::RealType;
+  using FullValueType     = typename OrbitalSetTraits<T>::FullValueType;
+  ;
+  template<typename DT>
+  using OffloadMatrix = Matrix<DT, OffloadPinnedAllocator<DT>>;
 
-    /** constructor */
-    SPOSetT<T>(const std::string& my_name);
+  /** constructor */
+  SPOSetT<T>(const std::string& my_name);
 
-    /** destructor
+  /** destructor
      *
      * Derived class destructor needs to pay extra attention to freeing memory
      * shared among clones of SPOSet.
      */
-    virtual ~SPOSetT<T>() = default;
+  virtual ~SPOSetT<T>() = default;
 
-    /** return the size of the orbital set
+  /** return the size of the orbital set
      * Ye: this needs to be replaced by getOrbitalSetSize();
      */
-    inline int
-    size() const
-    {
-        return OrbitalSetSize;
-    }
+  inline int size() const { return OrbitalSetSize; }
 
-    /** print basic SPOSet information
+  /** print basic SPOSet information
      */
-    void
-    basic_report(const std::string& pad = "") const;
+  void basic_report(const std::string& pad = "") const;
 
-    /** print SPOSet information
+  /** print SPOSet information
      */
-    virtual void
-    report(const std::string& pad = "") const
-    {
-        basic_report(pad);
-    }
+  virtual void report(const std::string& pad = "") const { basic_report(pad); }
 
-    /** return the size of the orbitals
+  /** return the size of the orbitals
      */
-    inline int
-    getOrbitalSetSize() const
-    {
-        return OrbitalSetSize;
-    }
+  inline int getOrbitalSetSize() const { return OrbitalSetSize; }
 
-    /// Query if this SPOSet is optimizable
-    virtual bool
-    isOptimizable() const
-    {
-        return false;
-    }
+  /// Query if this SPOSet is optimizable
+  virtual bool isOptimizable() const { return false; }
 
-    /** extract underlying OptimizableObject references
+  /** extract underlying OptimizableObject references
      * @param opt_obj_refs aggregated list of optimizable object references
      */
-    virtual void
-    extractOptimizableObjectRefs(UniqueOptObjRefsT<T>& opt_obj_refs);
+  virtual void extractOptimizableObjectRefs(UniqueOptObjRefsT<T>& opt_obj_refs);
 
-    /** check out variational optimizable variables
+  /** check out variational optimizable variables
      * @param active a super set of optimizable variables
      */
-    virtual void checkOutVariables(const OptVariablesTypeT<T>& active);
+  virtual void checkOutVariables(const OptVariablesTypeT<T>& active);
 
-    /// Query if this SPOSet uses OpenMP offload
-    virtual bool
-    isOMPoffload() const
-    {
-        return false;
-    }
+  /// Query if this SPOSet uses OpenMP offload
+  virtual bool isOMPoffload() const { return false; }
 
-    /** Query if this SPOSet has an explicit ion dependence. returns true if it
+  /** Query if this SPOSet has an explicit ion dependence. returns true if it
      * does.
      */
-    virtual bool
-    hasIonDerivs() const
-    {
-        return false;
-    }
+  virtual bool hasIonDerivs() const { return false; }
 
-    /// check a few key parameters before putting the SPO into a determinant
-    virtual void
-    checkObject() const
-    {
-    }
+  /// check a few key parameters before putting the SPO into a determinant
+  virtual void checkObject() const {}
 
-    /// return true if this SPOSet can be wrappered by RotatedSPO
-    virtual bool
-    isRotationSupported() const
-    {
-        return false;
-    }
-    /// store parameters before getting destroyed by rotation.
-    virtual void
-    storeParamsBeforeRotation()
-    {
-    }
-    /// apply rotation to all the orbitals
-    virtual void
-    applyRotation(const ValueMatrix& rot_mat, bool use_stored_copy = false);
+  /// return true if this SPOSet can be wrappered by RotatedSPO
+  virtual bool isRotationSupported() const { return false; }
+  /// store parameters before getting destroyed by rotation.
+  virtual void storeParamsBeforeRotation() {}
+  /// apply rotation to all the orbitals
+  virtual void applyRotation(const ValueMatrix& rot_mat, bool use_stored_copy = false);
 
-    /// Parameter derivatives of the wavefunction and the Laplacian of the
-    /// wavefunction
-    virtual void evaluateDerivatives(ParticleSetT<T>& P,
+  /// Parameter derivatives of the wavefunction and the Laplacian of the
+  /// wavefunction
+  virtual void evaluateDerivatives(ParticleSetT<T>& P,
+                                   const OptVariablesTypeT<T>& optvars,
+                                   Vector<T>& dlogpsi,
+                                   Vector<T>& dhpsioverpsi,
+                                   const int& FirstIndex,
+                                   const int& LastIndex);
+
+  /// Parameter derivatives of the wavefunction
+  virtual void evaluateDerivativesWF(ParticleSetT<T>& P,
                                      const OptVariablesTypeT<T>& optvars,
                                      Vector<T>& dlogpsi,
-                                     Vector<T>& dhpsioverpsi,
-                                     const int& FirstIndex,
-                                     const int& LastIndex);
+                                     int FirstIndex,
+                                     int LastIndex);
 
-    /// Parameter derivatives of the wavefunction
-    virtual void evaluateDerivativesWF(ParticleSetT<T>& P,
-                                       const OptVariablesTypeT<T>& optvars,
-                                       Vector<T>& dlogpsi,
-                                       int FirstIndex,
-                                       int LastIndex);
-
-    /** Evaluate the derivative of the optimized orbitals with respect to the
+  /** Evaluate the derivative of the optimized orbitals with respect to the
      * parameters this is used only for MSD, to be refined for better serving
      * both single and multi SD
      */
-    virtual void evaluateDerivatives(ParticleSetT<T>& P,
+  virtual void evaluateDerivatives(ParticleSetT<T>& P,
+                                   const OptVariablesTypeT<T>& optvars,
+                                   Vector<T>& dlogpsi,
+                                   Vector<T>& dhpsioverpsi,
+                                   const T& psiCurrent,
+                                   const std::vector<T>& Coeff,
+                                   const std::vector<size_t>& C2node_up,
+                                   const std::vector<size_t>& C2node_dn,
+                                   const ValueVector& detValues_up,
+                                   const ValueVector& detValues_dn,
+                                   const GradMatrix& grads_up,
+                                   const GradMatrix& grads_dn,
+                                   const ValueMatrix& lapls_up,
+                                   const ValueMatrix& lapls_dn,
+                                   const ValueMatrix& M_up,
+                                   const ValueMatrix& M_dn,
+                                   const ValueMatrix& Minv_up,
+                                   const ValueMatrix& Minv_dn,
+                                   const GradMatrix& B_grad,
+                                   const ValueMatrix& B_lapl,
+                                   const std::vector<int>& detData_up,
+                                   const size_t N1,
+                                   const size_t N2,
+                                   const size_t NP1,
+                                   const size_t NP2,
+                                   const std::vector<std::vector<int>>& lookup_tbl);
+
+  /** Evaluate the derivative of the optimized orbitals with respect to the
+     * parameters this is used only for MSD, to be refined for better serving
+     * both single and multi SD
+     */
+  virtual void evaluateDerivativesWF(ParticleSetT<T>& P,
                                      const OptVariablesTypeT<T>& optvars,
-                                     Vector<T>& dlogpsi,
-                                     Vector<T>& dhpsioverpsi,
-                                     const T& psiCurrent,
+                                     Vector<ValueType>& dlogpsi,
+                                     const FullValueType& psiCurrent,
                                      const std::vector<T>& Coeff,
                                      const std::vector<size_t>& C2node_up,
                                      const std::vector<size_t>& C2node_dn,
                                      const ValueVector& detValues_up,
                                      const ValueVector& detValues_dn,
-                                     const GradMatrix& grads_up,
-                                     const GradMatrix& grads_dn,
-                                     const ValueMatrix& lapls_up,
-                                     const ValueMatrix& lapls_dn,
                                      const ValueMatrix& M_up,
                                      const ValueMatrix& M_dn,
                                      const ValueMatrix& Minv_up,
                                      const ValueMatrix& Minv_dn,
-                                     const GradMatrix& B_grad,
-                                     const ValueMatrix& B_lapl,
                                      const std::vector<int>& detData_up,
-                                     const size_t N1,
-                                     const size_t N2,
-                                     const size_t NP1,
-                                     const size_t NP2,
                                      const std::vector<std::vector<int>>& lookup_tbl);
 
-    /** Evaluate the derivative of the optimized orbitals with respect to the
-     * parameters this is used only for MSD, to be refined for better serving
-     * both single and multi SD
-     */
-    virtual void evaluateDerivativesWF(ParticleSetT<T>& P,
-                                       const OptVariablesTypeT<T>& optvars,
-                                       Vector<ValueType>& dlogpsi,
-                                       const FullValueType& psiCurrent,
-                                       const std::vector<T>& Coeff,
-                                       const std::vector<size_t>& C2node_up,
-                                       const std::vector<size_t>& C2node_dn,
-                                       const ValueVector& detValues_up,
-                                       const ValueVector& detValues_dn,
-                                       const ValueMatrix& M_up,
-                                       const ValueMatrix& M_dn,
-                                       const ValueMatrix& Minv_up,
-                                       const ValueMatrix& Minv_dn,
-                                       const std::vector<int>& detData_up,
-                                       const std::vector<std::vector<int>>& lookup_tbl);
-
-    /** set the OrbitalSetSize
+  /** set the OrbitalSetSize
      * @param norbs number of single-particle orbitals
      * Ye: I prefer to remove this interface in the future. SPOSet builders need
      * to handle the size correctly. It doesn't make sense allowing to set the
      * value at any place in the code.
      * @TODO make it purely virtual
      */
-    virtual void
-    setOrbitalSetSize(int norbs){};
+  virtual void setOrbitalSetSize(int norbs){};
 
-    /** evaluate the values of this single-particle orbital set
+  /** evaluate the values of this single-particle orbital set
      * @param P current ParticleSet
      * @param iat active particle
      * @param psi values of the SPO
      * @TODO make it purely virtual
      */
-    virtual void
-    evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi){};
+  virtual void evaluateValue(const ParticleSetT<T>& P, int iat, ValueVector& psi){};
 
-    /** evaluate determinant ratios for virtual moves, e.g., sphere move for
+  /** evaluate determinant ratios for virtual moves, e.g., sphere move for
      * nonlocalPP
      * @param VP virtual particle set
      * @param psi values of the SPO, used as a scratch space if needed
@@ -271,22 +224,23 @@ public:
      * particle moved virtually
      * @param ratios return determinant ratios
      */
-    virtual void
-    evaluateDetRatios(const VirtualParticleSetT<T>& VP, ValueVector& psi,
-        const ValueVector& psiinv, std::vector<T>& ratios);
+  virtual void evaluateDetRatios(const VirtualParticleSetT<T>& VP,
+                                 ValueVector& psi,
+                                 const ValueVector& psiinv,
+                                 std::vector<T>& ratios);
 
-    /// Determinant ratios and parameter derivatives of the wavefunction for
-    /// virtual moves
-    virtual void evaluateDerivRatios(const VirtualParticleSetT<T>& VP,
-                                     const OptVariablesTypeT<T>& optvars,
-                                     ValueVector& psi,
-                                     const ValueVector& psiinv,
-                                     std::vector<T>& ratios,
-                                     Matrix<T>& dratios,
-                                     int FirstIndex,
-                                     int LastIndex);
+  /// Determinant ratios and parameter derivatives of the wavefunction for
+  /// virtual moves
+  virtual void evaluateDerivRatios(const VirtualParticleSetT<T>& VP,
+                                   const OptVariablesTypeT<T>& optvars,
+                                   ValueVector& psi,
+                                   const ValueVector& psiinv,
+                                   std::vector<T>& ratios,
+                                   Matrix<T>& dratios,
+                                   int FirstIndex,
+                                   int LastIndex);
 
-    /** evaluate determinant ratios for virtual moves, e.g., sphere move for
+  /** evaluate determinant ratios for virtual moves, e.g., sphere move for
      * nonlocalPP, of multiple walkers
      * @param spo_list the list of SPOSet pointers in a walker batch
      * @param vp_list a list of virtual particle sets in a walker batch
@@ -296,14 +250,13 @@ public:
      * matrix corresponding to the particles moved virtually
      * @param ratios_list a list of returning determinant ratios
      */
-    virtual void
-    mw_evaluateDetRatios(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
-        const RefVector<ValueVector>& psi_list,
-        const std::vector<const T*>& invRow_ptr_list,
-        std::vector<std::vector<T>>& ratios_list) const;
+  virtual void mw_evaluateDetRatios(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                    const RefVectorWithLeader<const VirtualParticleSetT<T>>& vp_list,
+                                    const RefVector<ValueVector>& psi_list,
+                                    const std::vector<const T*>& invRow_ptr_list,
+                                    std::vector<std::vector<T>>& ratios_list) const;
 
-    /** evaluate the values, gradients and laplacians of this single-particle
+  /** evaluate the values, gradients and laplacians of this single-particle
      * orbital set
      * @param P current ParticleSet
      * @param iat active particle
@@ -312,11 +265,9 @@ public:
      * @param d2psi laplacians of the SPO
      * @TODO make this purely virtual
      */
-    virtual void
-    evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi,
-        GradVector& dpsi, ValueVector& d2psi){};
+  virtual void evaluateVGL(const ParticleSetT<T>& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi){};
 
-    /** evaluate the values, gradients and laplacians and spin gradient of this
+  /** evaluate the values, gradients and laplacians and spin gradient of this
      * single-particle orbital set
      * @param P current ParticleSet
      * @param iat active particle
@@ -325,23 +276,26 @@ public:
      * @param d2psi laplacians of the SPO
      * @param dspin spin gradients of the SPO
      */
-    virtual void
-    evaluateVGL_spin(const ParticleSetT<T>& P, int iat, ValueVector& psi,
-        GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin);
+  virtual void evaluateVGL_spin(const ParticleSetT<T>& P,
+                                int iat,
+                                ValueVector& psi,
+                                GradVector& dpsi,
+                                ValueVector& d2psi,
+                                ValueVector& dspin);
 
-    /** evaluate the values this single-particle orbital sets of multiple
+  /** evaluate the values this single-particle orbital sets of multiple
      * walkers
      * @param spo_list the list of SPOSet pointers in a walker batch
      * @param P_list the list of ParticleSet pointers in a walker batch
      * @param iat active particle
      * @param psi_v_list the list of value vector pointers in a walker batch
      */
-    virtual void
-    mw_evaluateValue(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
-        const RefVector<ValueVector>& psi_v_list) const;
+  virtual void mw_evaluateValue(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                const RefVectorWithLeader<ParticleSetT<T>>& P_list,
+                                int iat,
+                                const RefVector<ValueVector>& psi_v_list) const;
 
-    /** evaluate the values, gradients and laplacians of this single-particle
+  /** evaluate the values, gradients and laplacians of this single-particle
      * orbital sets of multiple walkers
      * @param spo_list the list of SPOSet pointers in a walker batch
      * @param P_list the list of ParticleSet pointers in a walker batch
@@ -351,14 +305,14 @@ public:
      * @param d2psi_v_list the list of laplacian vector pointers in a walker
      * batch
      */
-    virtual void
-    mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
-        const RefVector<ValueVector>& psi_v_list,
-        const RefVector<GradVector>& dpsi_v_list,
-        const RefVector<ValueVector>& d2psi_v_list) const;
+  virtual void mw_evaluateVGL(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                              const RefVectorWithLeader<ParticleSetT<T>>& P_list,
+                              int iat,
+                              const RefVector<ValueVector>& psi_v_list,
+                              const RefVector<GradVector>& dpsi_v_list,
+                              const RefVector<ValueVector>& d2psi_v_list) const;
 
-    /** evaluate the values, gradients and laplacians and spin gradient of this
+  /** evaluate the values, gradients and laplacians and spin gradient of this
      * single-particle orbital sets of multiple walkers
      * @param spo_list the list of SPOSet pointers in a walker batch
      * @param P_list the list of ParticleSet pointers in a walker batch
@@ -370,15 +324,15 @@ public:
      * @param mw_dspin is a dual matrix of spin gradients [nw][norb]
      * Note that the device side of mw_dspin is up to date
      */
-    virtual void
-    mw_evaluateVGLWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
-        const RefVector<ValueVector>& psi_v_list,
-        const RefVector<GradVector>& dpsi_v_list,
-        const RefVector<ValueVector>& d2psi_v_list,
-        OffloadMatrix<ComplexType>& mw_dspin) const;
+  virtual void mw_evaluateVGLWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                      const RefVectorWithLeader<ParticleSetT<T>>& P_list,
+                                      int iat,
+                                      const RefVector<ValueVector>& psi_v_list,
+                                      const RefVector<GradVector>& dpsi_v_list,
+                                      const RefVector<ValueVector>& d2psi_v_list,
+                                      OffloadMatrix<ComplexType>& mw_dspin) const;
 
-    /** evaluate the values, gradients and laplacians of this single-particle
+  /** evaluate the values, gradients and laplacians of this single-particle
      * orbital sets and determinant ratio and grads of multiple walkers. Device
      * data of phi_vgl_v must be up-to-date upon return
      * @param spo_list the list of SPOSet pointers in a walker batch
@@ -388,15 +342,15 @@ public:
      * walkers
      * @param psi_ratio_grads_v determinant ratio and grads of all the walkers
      */
-    virtual void
-    mw_evaluateVGLandDetRatioGrads(
-        const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
-        const std::vector<const T*>& invRow_ptr_list,
-        OffloadMWVGLArray& phi_vgl_v, std::vector<T>& ratios,
-        std::vector<GradType>& grads) const;
+  virtual void mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                              const RefVectorWithLeader<ParticleSetT<T>>& P_list,
+                                              int iat,
+                                              const std::vector<const T*>& invRow_ptr_list,
+                                              OffloadMWVGLArray& phi_vgl_v,
+                                              std::vector<T>& ratios,
+                                              std::vector<GradType>& grads) const;
 
-    /** evaluate the values, gradients and laplacians of this single-particle
+  /** evaluate the values, gradients and laplacians of this single-particle
      * orbital sets and determinant ratio and grads of multiple walkers. Device
      * data of phi_vgl_v must be up-to-date upon return. Includes spin gradients
      * @param spo_list the list of SPOSet pointers in a walker batch
@@ -408,15 +362,16 @@ public:
      * @param grads, spatial gradients of all walkers
      * @param spingrads, spin gradients of all walkers
      */
-    virtual void
-    mw_evaluateVGLandDetRatioGradsWithSpin(
-        const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int iat,
-        const std::vector<const T*>& invRow_ptr_list,
-        OffloadMWVGLArray& phi_vgl_v, std::vector<T>& ratios,
-        std::vector<GradType>& grads, std::vector<T>& spingrads) const;
+  virtual void mw_evaluateVGLandDetRatioGradsWithSpin(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                                      const RefVectorWithLeader<ParticleSetT<T>>& P_list,
+                                                      int iat,
+                                                      const std::vector<const T*>& invRow_ptr_list,
+                                                      OffloadMWVGLArray& phi_vgl_v,
+                                                      std::vector<T>& ratios,
+                                                      std::vector<GradType>& grads,
+                                                      std::vector<T>& spingrads) const;
 
-    /** evaluate the values, gradients and hessians of this single-particle
+  /** evaluate the values, gradients and hessians of this single-particle
      * orbital set
      * @param P current ParticleSet
      * @param iat active particle
@@ -424,11 +379,13 @@ public:
      * @param dpsi gradients of the SPO
      * @param grad_grad_psi hessians of the SPO
      */
-    virtual void
-    evaluateVGH(const ParticleSetT<T>& P, int iat, ValueVector& psi,
-        GradVector& dpsi, HessVector& grad_grad_psi);
+  virtual void evaluateVGH(const ParticleSetT<T>& P,
+                           int iat,
+                           ValueVector& psi,
+                           GradVector& dpsi,
+                           HessVector& grad_grad_psi);
 
-    /** evaluate the values, gradients, hessians, and grad hessians of this
+  /** evaluate the values, gradients, hessians, and grad hessians of this
      * single-particle orbital set
      * @param P current ParticleSet
      * @param iat active particle
@@ -437,31 +394,29 @@ public:
      * @param grad_grad_psi hessians of the SPO
      * @param grad_grad_grad_psi grad hessians of the SPO
      */
-    virtual void
-    evaluateVGHGH(const ParticleSetT<T>& P, int iat, ValueVector& psi,
-        GradVector& dpsi, HessVector& grad_grad_psi,
-        GGGVector& grad_grad_grad_psi);
+  virtual void evaluateVGHGH(const ParticleSetT<T>& P,
+                             int iat,
+                             ValueVector& psi,
+                             GradVector& dpsi,
+                             HessVector& grad_grad_psi,
+                             GGGVector& grad_grad_grad_psi);
 
-    /** evaluate the values of this single-particle orbital set
+  /** evaluate the values of this single-particle orbital set
      * @param P current ParticleSet
      * @param iat active particle
      * @param psi values of the SPO
      */
-    virtual void
-    evaluate_spin(
-        const ParticleSetT<T>& P, int iat, ValueVector& psi, ValueVector& dpsi);
+  virtual void evaluate_spin(const ParticleSetT<T>& P, int iat, ValueVector& psi, ValueVector& dpsi);
 
-    /** evaluate the third derivatives of this single-particle orbital set
+  /** evaluate the third derivatives of this single-particle orbital set
      * @param P current ParticleSet
      * @param first first particle
      * @param last last particle
      * @param grad_grad_grad_logdet third derivatives of the SPO
      */
-    virtual void
-    evaluateThirdDeriv(const ParticleSetT<T>& P, int first, int last,
-        GGGMatrix& grad_grad_grad_logdet);
+  virtual void evaluateThirdDeriv(const ParticleSetT<T>& P, int first, int last, GGGMatrix& grad_grad_grad_logdet);
 
-    /** evaluate the values, gradients and laplacians of this single-particle
+  /** evaluate the values, gradients and laplacians of this single-particle
      * orbital for [first,last) particles
      * @param[in] P current ParticleSet
      * @param[in] first starting index of the particles
@@ -471,11 +426,14 @@ public:
      * @param[out] d2logdet laplacians
      * @TODO make this pure virtual
      */
-    virtual void
-    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
-        ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet){};
+  virtual void evaluate_notranspose(const ParticleSetT<T>& P,
+                                    int first,
+                                    int last,
+                                    ValueMatrix& logdet,
+                                    GradMatrix& dlogdet,
+                                    ValueMatrix& d2logdet){};
 
-    /** evaluate the values, gradients and laplacians of this single-particle
+  /** evaluate the values, gradients and laplacians of this single-particle
      * orbital for [first,last) particles, including the spin gradient
      * @param P current ParticleSet
      * @param first starting index of the particles
@@ -488,19 +446,23 @@ public:
      * default implementation will abort for all SPOSets except SpinorSet
      *
      */
-    virtual void
-    evaluate_notranspose_spin(const ParticleSetT<T>& P, int first, int last,
-        ValueMatrix& logdet, GradMatrix& dlogdet, ValueMatrix& d2logdet,
-        ValueMatrix& dspinlogdet);
+  virtual void evaluate_notranspose_spin(const ParticleSetT<T>& P,
+                                         int first,
+                                         int last,
+                                         ValueMatrix& logdet,
+                                         GradMatrix& dlogdet,
+                                         ValueMatrix& d2logdet,
+                                         ValueMatrix& dspinlogdet);
 
-    virtual void
-    mw_evaluate_notranspose(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
-        const RefVectorWithLeader<ParticleSetT<T>>& P_list, int first, int last,
-        const RefVector<ValueMatrix>& logdet_list,
-        const RefVector<GradMatrix>& dlogdet_list,
-        const RefVector<ValueMatrix>& d2logdet_list) const;
+  virtual void mw_evaluate_notranspose(const RefVectorWithLeader<SPOSetT<T>>& spo_list,
+                                       const RefVectorWithLeader<ParticleSetT<T>>& P_list,
+                                       int first,
+                                       int last,
+                                       const RefVector<ValueMatrix>& logdet_list,
+                                       const RefVector<GradMatrix>& dlogdet_list,
+                                       const RefVector<ValueMatrix>& d2logdet_list) const;
 
-    /** evaluate the values, gradients and hessians of this single-particle
+  /** evaluate the values, gradients and hessians of this single-particle
      * orbital for [first,last) particles
      * @param P current ParticleSet
      * @param first starting index of the particles
@@ -510,11 +472,14 @@ public:
      * @param grad_grad_logdet hessians
      *
      */
-    virtual void
-    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
-        ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet);
+  virtual void evaluate_notranspose(const ParticleSetT<T>& P,
+                                    int first,
+                                    int last,
+                                    ValueMatrix& logdet,
+                                    GradMatrix& dlogdet,
+                                    HessMatrix& grad_grad_logdet);
 
-    /** evaluate the values, gradients, hessians and third derivatives of this
+  /** evaluate the values, gradients, hessians and third derivatives of this
      * single-particle orbital for [first,last) particles
      * @param P current ParticleSet
      * @param first starting index of the particles
@@ -525,12 +490,15 @@ public:
      * @param grad_grad_grad_logdet third derivatives
      *
      */
-    virtual void
-    evaluate_notranspose(const ParticleSetT<T>& P, int first, int last,
-        ValueMatrix& logdet, GradMatrix& dlogdet, HessMatrix& grad_grad_logdet,
-        GGGMatrix& grad_grad_grad_logdet);
+  virtual void evaluate_notranspose(const ParticleSetT<T>& P,
+                                    int first,
+                                    int last,
+                                    ValueMatrix& logdet,
+                                    GradMatrix& dlogdet,
+                                    HessMatrix& grad_grad_logdet,
+                                    GGGMatrix& grad_grad_grad_logdet);
 
-    /** evaluate the gradients of this single-particle orbital
+  /** evaluate the gradients of this single-particle orbital
      *  for [first,last) target particles with respect to the given source
      * particle
      * @param P current ParticleSet
@@ -540,11 +508,14 @@ public:
      * @param gradphi gradients
      *
      */
-    virtual void
-    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
-        const ParticleSetT<T>& source, int iat_src, GradMatrix& gradphi);
+  virtual void evaluateGradSource(const ParticleSetT<T>& P,
+                                  int first,
+                                  int last,
+                                  const ParticleSetT<T>& source,
+                                  int iat_src,
+                                  GradMatrix& gradphi);
 
-    /** evaluate the gradients of values, gradients, laplacians of this
+  /** evaluate the gradients of values, gradients, laplacians of this
      * single-particle orbital for [first,last) target particles with respect to
      * the given source particle
      * @param P current ParticleSet
@@ -556,12 +527,16 @@ public:
      * @param grad_lapl_phi gradients of laplacians
      *
      */
-    virtual void
-    evaluateGradSource(const ParticleSetT<T>& P, int first, int last,
-        const ParticleSetT<T>& source, int iat_src, GradMatrix& grad_phi,
-        HessMatrix& grad_grad_phi, GradMatrix& grad_lapl_phi);
+  virtual void evaluateGradSource(const ParticleSetT<T>& P,
+                                  int first,
+                                  int last,
+                                  const ParticleSetT<T>& source,
+                                  int iat_src,
+                                  GradMatrix& grad_phi,
+                                  HessMatrix& grad_grad_phi,
+                                  GradMatrix& grad_lapl_phi);
 
-    /** @brief Returns a row of d/dR_iat phi_j(r) evaluated at position r.
+  /** @brief Returns a row of d/dR_iat phi_j(r) evaluated at position r.
      *
      *  @param[in] P particle set.
      *  @param[in] iel The electron at which to evaluate phi(r_iel)
@@ -570,96 +545,67 @@ public:
      *  @param[in,out] gradphi Vector of d/dR_iat phi_j(r).
      *  @return Void
      */
-    virtual void
-    evaluateGradSourceRow(const ParticleSetT<T>& P, int iel,
-        const ParticleSetT<T>& source, int iat_src, GradVector& gradphi);
+  virtual void evaluateGradSourceRow(const ParticleSetT<T>& P,
+                                     int iel,
+                                     const ParticleSetT<T>& source,
+                                     int iat_src,
+                                     GradVector& gradphi);
 
-    /** access the k point related to the given orbital */
-    virtual PosType
-    get_k(int orb)
-    {
-        return PosType();
-    }
+  /** access the k point related to the given orbital */
+  virtual PosType get_k(int orb) { return PosType(); }
 
-    /** initialize a shared resource and hand it to collection
+  /** initialize a shared resource and hand it to collection
      */
-    virtual void
-    createResource(ResourceCollection& collection) const
-    {
-    }
+  virtual void createResource(ResourceCollection& collection) const {}
 
-    /** acquire a shared resource from collection
+  /** acquire a shared resource from collection
      */
-    virtual void
-    acquireResource(ResourceCollection& collection,
-        const RefVectorWithLeader<SPOSetT<T>>& spo_list) const
-    {
-    }
+  virtual void acquireResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<T>>& spo_list) const {}
 
-    /** return a shared resource to collection
+  /** return a shared resource to collection
      */
-    virtual void
-    releaseResource(ResourceCollection& collection,
-        const RefVectorWithLeader<SPOSetT<T>>& spo_list) const
-    {
-    }
+  virtual void releaseResource(ResourceCollection& collection, const RefVectorWithLeader<SPOSetT<T>>& spo_list) const {}
 
-    /** make a clone of itself
+  /** make a clone of itself
      * every derived class must implement this to have threading working
      * correctly.
      */
-    [[noreturn]] virtual std::unique_ptr<SPOSetT<T>>
-    makeClone() const;
+  [[noreturn]] virtual std::unique_ptr<SPOSetT<T>> makeClone() const;
 
-    /** Used only by cusp correction in AOS LCAO.
+  /** Used only by cusp correction in AOS LCAO.
      * Ye: the SoA LCAO moves all this responsibility to the builder.
      * This interface should be removed with AoS.
      */
-    virtual bool
-    transformSPOSet()
-    {
-        return true;
-    }
+  virtual bool transformSPOSet() { return true; }
 
-    /** finalize the construction of SPOSet
+  /** finalize the construction of SPOSet
      *
      * for example, classes serving accelerators may need to transfer data from
      * host to device after the host side objects are built.
      */
-    virtual void
-    finalizeConstruction()
-    {
-    }
+  virtual void finalizeConstruction() {}
 
-    /// return object name
-    const std::string&
-    getName() const
-    {
-        return my_name_;
-    }
+  /// return object name
+  const std::string& getName() const { return my_name_; }
 
-    /// @TODO make this purely virutal return class name
-    virtual std::string
-    getClassName() const
-    {
-        return "";
-    };
+  /// @TODO make this purely virutal return class name
+  virtual std::string getClassName() const { return ""; };
 
 protected:
-    /// name of the object, unique identifier
-    const std::string my_name_;
-    /// number of Single-particle orbitals
-    IndexType OrbitalSetSize;
-    /// Optimizable variables
-    OptVariablesTypeT<T> myVars;
+  /// name of the object, unique identifier
+  const std::string my_name_;
+  /// number of Single-particle orbitals
+  IndexType OrbitalSetSize;
+  /// Optimizable variables
+  OptVariablesTypeT<T> myVars;
 
-    friend OptVariablesTypeT<float>& testing::getMyVars(SPOSetT<float>& spo);
-    friend OptVariablesTypeT<double>& testing::getMyVars(SPOSetT<double>& spo);
-    friend OptVariablesTypeT<std::complex<float>>& testing::getMyVars(SPOSetT<std::complex<float>>& spo);
-    friend OptVariablesTypeT<std::complex<double>>& testing::getMyVars(SPOSetT<std::complex<double>>& spo);
+  friend OptVariablesTypeT<float>& testing::getMyVars(SPOSetT<float>& spo);
+  friend OptVariablesTypeT<double>& testing::getMyVars(SPOSetT<double>& spo);
+  friend OptVariablesTypeT<std::complex<float>>& testing::getMyVars(SPOSetT<std::complex<float>>& spo);
+  friend OptVariablesTypeT<std::complex<double>>& testing::getMyVars(SPOSetT<std::complex<double>>& spo);
 };
 
-template <class T>
+template<class T>
 using SPOSetTPtr = SPOSetT<T>*;
 
 } // namespace qmcplusplus

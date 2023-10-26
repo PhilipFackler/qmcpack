@@ -219,7 +219,7 @@ struct VectorSoaContainer
        */
   void copyOut(Vector<TinyVector<T, D>>& out) const
   {
-    PosSoA2AoS(nLocal, D, myData, nGhosts, reinterpret_cast<T1*>(out.first_address()), D);
+    PosSoA2AoS(nLocal, D, myData, nGhosts, reinterpret_cast<T*>(out.first_address()), D);
   }
 
   /** return TinyVector<T,D>

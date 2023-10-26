@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2022 QMCPACK developers.
 //
@@ -23,35 +23,25 @@ namespace qmcplusplus
 template<typename T>
 using OptVariablesTypeT = optimize::VariableSetT<T>;
 
-template <typename T>
+template<typename T>
 class OptimizableObjectT
 {
 public:
-    OptimizableObjectT(const std::string& name) : name_(name)
-    {
-    }
+  OptimizableObjectT(const std::string& name) : name_(name) {}
 
-    const std::string&
-    getName() const
-    {
-        return name_;
-    }
-    bool
-    isOptimized() const
-    {
-        return is_optimized_;
-    }
+  const std::string& getName() const { return name_; }
+  bool isOptimized() const { return is_optimized_; }
 
 private:
-    /** Name of the optimizable object
+  /** Name of the optimizable object
      */
-    const std::string name_;
-    /** If true, this object is actively modified during WFOpt
+  const std::string name_;
+  /** If true, this object is actively modified during WFOpt
      */
-    bool is_optimized_ = false;
+  bool is_optimized_ = false;
 
 public:
-    /** check in variational parameters to the global list of parameters used by
+  /** check in variational parameters to the global list of parameters used by
      * the optimizer.
      * @param active a super set of optimizable variables
      *
@@ -111,29 +101,22 @@ public:
   virtual void readVariationalParameters(hdf_archive& hin){};
 };
 
-template <typename T>
+template<typename T>
 class UniqueOptObjRefsT : public RefVector<OptimizableObjectT<T>>
 {
 public:
-    OptimizableObjectT<T>&
-    operator[](size_t i) const
-    {
-        return RefVector<OptimizableObjectT<T>>::operator[](i);
-    }
+  OptimizableObjectT<T>& operator[](size_t i) const { return RefVector<OptimizableObjectT<T>>::operator[](i); }
 
-    void
-    push_back(OptimizableObjectT<T>& obj)
-    {
-        if (obj.getName().empty())
-            throw std::logic_error("BUG!! Only named OptimizableObject object "
-                                   "can be added to UniqueOptObjRefs!");
-        auto result = std::find_if(
-            this->begin(), this->end(), [&](OptimizableObjectT<T>& element) {
-                return element.getName() == obj.getName();
-            });
-        if (result == this->end())
-            RefVector<OptimizableObjectT<T>>::push_back(obj);
-    }
+  void push_back(OptimizableObjectT<T>& obj)
+  {
+    if (obj.getName().empty())
+      throw std::logic_error("BUG!! Only named OptimizableObject object "
+                             "can be added to UniqueOptObjRefs!");
+    auto result = std::find_if(this->begin(), this->end(),
+                               [&](OptimizableObjectT<T>& element) { return element.getName() == obj.getName(); });
+    if (result == this->end())
+      RefVector<OptimizableObjectT<T>>::push_back(obj);
+  }
 };
 
 } // namespace qmcplusplus

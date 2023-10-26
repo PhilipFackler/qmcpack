@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2020  QMCPACK developers.
 //
@@ -20,57 +20,52 @@ namespace qmcplusplus
  * @param n number of samples per rank
  * @param num_ranks number of ranks. Used to set global number of samples.
  */
-template <typename T>
-void
-SampleStackT<T>::setMaxSamples(size_t n, size_t num_ranks)
+template<typename T>
+void SampleStackT<T>::setMaxSamples(size_t n, size_t num_ranks)
 {
-    max_samples_ = n;
-    global_num_samples_ = n * num_ranks;
-    current_sample_count_ = std::min(current_sample_count_, max_samples_);
-    sample_vector_.resize(n, MCSample(0));
+  max_samples_          = n;
+  global_num_samples_   = n * num_ranks;
+  current_sample_count_ = std::min(current_sample_count_, max_samples_);
+  sample_vector_.resize(n, MCSample(0));
 }
 
-template <typename T>
-const MCSample&
-SampleStackT<T>::getSample(size_t i) const
+template<typename T>
+const MCSample& SampleStackT<T>::getSample(size_t i) const
 {
-    return sample_vector_[i];
+  return sample_vector_[i];
 }
 
-template <typename T>
-void
-SampleStackT<T>::appendSample(MCSample&& sample)
+template<typename T>
+void SampleStackT<T>::appendSample(MCSample&& sample)
 {
-    // Ignore samples in excess of the expected number of samples
-    if (current_sample_count_ < max_samples_) {
-        sample_vector_[current_sample_count_] = std::move(sample);
-        current_sample_count_++;
-    }
+  // Ignore samples in excess of the expected number of samples
+  if (current_sample_count_ < max_samples_)
+  {
+    sample_vector_[current_sample_count_] = std::move(sample);
+    current_sample_count_++;
+  }
 }
 
 /** load a single sample from SampleStack
  */
-template <typename T>
-void
-SampleStackT<T>::loadSample(ParticleSetT<T>& pset, size_t iw) const
+template<typename T>
+void SampleStackT<T>::loadSample(ParticleSetT<T>& pset, size_t iw) const
 {
-    pset.R = sample_vector_[iw].R;
-    pset.spins = sample_vector_[iw].spins;
+  pset.R     = sample_vector_[iw].R;
+  pset.spins = sample_vector_[iw].spins;
 }
 
-template <typename T>
-void
-SampleStackT<T>::clearEnsemble()
+template<typename T>
+void SampleStackT<T>::clearEnsemble()
 {
-    sample_vector_.clear();
-    current_sample_count_ = 0;
+  sample_vector_.clear();
+  current_sample_count_ = 0;
 }
 
-template <typename T>
-void
-SampleStackT<T>::resetSampleCount()
+template<typename T>
+void SampleStackT<T>::resetSampleCount()
 {
-    current_sample_count_ = 0;
+  current_sample_count_ = 0;
 }
 
 template class SampleStackT<double>;

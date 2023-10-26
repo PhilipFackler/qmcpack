@@ -32,7 +32,7 @@ class EinsplineSpinorSetBuilderT : public EinsplineSetBuilderT<T>
 {
   using ParticleSet = ParticleSetT<T>;
   using SPOSet      = SPOSetT<T>;
-  using PSetMap = std::map<std::string, const std::unique_ptr<ParticleSet>>;
+  using PSetMap     = std::map<std::string, const std::unique_ptr<ParticleSet>>;
 
 public:
   ///constructor

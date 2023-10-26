@@ -1,22 +1,18 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// This file is distributed under the University of Illinois/NCSA Open Source
-// License. See LICENSE file in top directory for details.
+// This file is distributed under the University of Illinois/NCSA Open Source License.
+// See LICENSE file in top directory for details.
 //
 // Copyright (c) 2020 QMCPACK developers.
 //
 // File developed by: Bryan Clark, bclark@Princeton.edu, Princeton University
-//                    Ken Esler, kpesler@gmail.com, University of Illinois at
-//                    Urbana-Champaign Miguel Morales, moralessilva2@llnl.gov,
-//                    Lawrence Livermore National Laboratory Jeremy McMinnis,
-//                    jmcminis@gmail.com, University of Illinois at
-//                    Urbana-Champaign Jaron T. Krogel, krogeljt@ornl.gov, Oak
-//                    Ridge National Laboratory Jeongnim Kim,
-//                    jeongnim.kim@gmail.com, University of Illinois at
-//                    Urbana-Champaign Mark A. Berrill, berrillma@ornl.gov, Oak
-//                    Ridge National Laboratory
+//                    Ken Esler, kpesler@gmail.com, University of Illinois at Urbana-Champaign
+//                    Miguel Morales, moralessilva2@llnl.gov, Lawrence Livermore National Laboratory
+//                    Jeremy McMinnis, jmcminis@gmail.com, University of Illinois at Urbana-Champaign
+//                    Jaron T. Krogel, krogeljt@ornl.gov, Oak Ridge National Laboratory
+//                    Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
+//                    Mark A. Berrill, berrillma@ornl.gov, Oak Ridge National Laboratory
 //
-// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois
-// at Urbana-Champaign
+// File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
 
 #include "SPOSetBuilderFactoryT.h"
@@ -144,10 +140,9 @@ std::unique_ptr<SPOSetBuilderT<T>> SPOSetBuilderFactoryT<T>::createSPOSetBuilder
     if (targetPtcl.isSpinor())
     {
 #ifdef QMC_COMPLEX
-            app_log() << "Einspline Spinor Set\n";
-            // FIXME
-            bb = std::make_unique<EinsplineSpinorSetBuilderT<T>>(targetPtcl,
-            ptclPool, myComm, rootNode);
+      app_log() << "Einspline Spinor Set\n";
+      // FIXME
+      bb = std::make_unique<EinsplineSpinorSetBuilderT<T>>(targetPtcl, ptclPool, myComm, rootNode);
 #else
       PRE.error("Use of einspline spinors requires QMC_COMPLEX=1.  "
                 "Rebuild with this option");
@@ -156,11 +151,10 @@ std::unique_ptr<SPOSetBuilderT<T>> SPOSetBuilderFactoryT<T>::createSPOSetBuilder
     else
     {
 #if defined(HAVE_EINSPLINE)
-            PRE << "EinsplineSetBuilder:  using libeinspline for B-spline "
-                   "orbitals.\n";
-            // FIXME
-            bb = std::make_unique<EinsplineSetBuilderT<T>>(targetPtcl, ptclPool,
-            myComm, rootNode);
+      PRE << "EinsplineSetBuilder:  using libeinspline for B-spline "
+             "orbitals.\n";
+      // FIXME
+      bb = std::make_unique<EinsplineSetBuilderT<T>>(targetPtcl, ptclPool, myComm, rootNode);
 #else
       PRE.error("Einspline is missing for B-spline orbitals", true);
 #endif
